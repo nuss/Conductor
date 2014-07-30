@@ -1,0 +1,564 @@
+TITLE:: Conductor
+summary:: Conductor provides a framework for defining interactive programs in terms of a collection of related components.
+categories:: Conductor, Control, GUI, Libraries, Quarks, Streams-Events-Patterns
+related:: Classes/ConductorPlayer, Classes/ConductorGUI, Classes/CV, Classes/SV, Classes/CVPreset, Classes/CVInterpolator
+
+DESCRIPTION::
+The Conductor is a kind of  link::Classes/Dictionary:: and its components are stored and accessed as dictionary entries (i.e., key/value pairs).  This allows the Conductor to be configured either when it is first defined or in separate code.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new Conductor object, containing a link::Classes/NullPreset:: and a link::Classes/ConductorPlayer:: instance.
+
+returns:: a code::Conductor::
+
+METHOD:: make
+The first argument of the function is set to the Conductor being constructed. Subsequent arguments are initalized as link::Classes/CV::s; arguments with default values are set to instances of the class the default value specifies.
+
+Below, the first line defines a Conductor with four link::Classes/CV::s assigned to the arguments a,b,c,d. The second line displays that Conductor.
+
+code::
+(
+c = Conductor.make { | conductor, a, b, c, d |  };
+c.show;
+)
+
+// here the CV d is initialized to an array of values.
+(
+c = Conductor.make { | conductor, a, b, c, d | d.value_(1/(1..128)) };
+c.show;
+)
+::
+
+ARGUMENT:: func
+a link::Classes/Function::. See explanation above.
+
+returns:: a code::Conductor::
+
+METHOD:: specs
+code::Conductor.specs:: is a dictionary of link::Classes/ControlSpec::s. When an argument in the make function is initialized to a link::Classes/CV::, its identifier is looked up in this dictionary. If that does not provide a link::Classes/ControlSpec::, the same identifier stripped of all of its numeric characters is used once again look-up.
+
+The specs dictionary is provided with the following defaults:
+code::amp, audiobus, beats, bipolar, boostcut, controlbus, db, dbamp, delay, detune, dur, fadeTime, fin, freq, i_out, in, lofreq, longdelay, midfreq, midi, midinote, midivelocity, out, pan, phase, rate, ratio, rq, unipolar, widefreq::
+
+code::
+// define a conductor using the default controlspecs
+(
+Conductor.specs[\spT] = ControlSpec(-60, 700, 'linear', 0, 33);
+a = Conductor.make{ | con, freq1, db, pan, dur, spT3, s3pT, sp3T|
+	con.name_("example 1");
+	con.pattern_(Pbind(*[freq: freq1, db: db, pan: pan, dur: dur]));
+};
+
+a.show;
+)
+
+(
+a.play;
+a[\freq].value = 700;
+)
+::
+
+returns:: an link::Classes/IdentityDictionary:: of link::Classes/ControlSpec::s
+
+METHOD:: makeCV
+(describe method here)
+
+ARGUMENT:: name
+(describe argument here)
+
+ARGUMENT:: value
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: findSpec
+(describe method here)
+
+ARGUMENT:: name
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: addSpec
+(describe method here)
+
+ARGUMENT:: name
+(describe argument here)
+
+ARGUMENT:: spec
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: midiMonitor
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: postSpecs
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: initClass
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+subsection:: Instance Variables
+
+METHOD:: gui
+An instance of link::Classes/ConductorGUI:: that defines the Conductor's GUI presentation
+
+returns:: a link::Classes/ConductorGUI::
+
+METHOD:: player
+An instance of link::Classes/ConductorPlayer::, which provides unified stop/play/pause/resume control for link::Classes/Pattern::s, link::Classes/Task::s, and, on the link::Classes/Server::s, link::Classes/Synth::s, link::Classes/Group::s, link::Classes/Bus::es, and link::Classes/Buffer::s. (These objects use a variant of link::Classes/Server#-sendBundle:: to guarantee correct order execution on the server.)
+
+returns:: a link::Classes/ConductorPlayer::
+
+METHOD:: preset
+An instance of link::Classes/CVPreset:: or link::Classes/CVInterpolator::. This provides preset values for a user specified collection of link::Classes/CV::s and Conductor's. The CVInterpolator allows interpolations between presets to be used for values
+
+returns:: a link::Classes/CVPreset:: or link::Classes/CVInterpolator::
+
+METHOD:: path
+Stores the pathname of the file that saves the Conductor's settings and attempts to load those settings.
+code::
+c = Conductor.make { | conductor, a, b, c, d |  };
+
+// set the path
+c.path_("~/Desktop".standardizePath);
+
+// get the path
+c.path;
+::
+ARGUMENT:: path
+a path to a location on the local harddisk.
+
+returns:: a link::Classes/String:: containing a path to a location on the local harddisk
+
+METHOD:: valueKeys
+An array of keys that determine the Conductor's response to value. (Typically includes both individual link::Classes/CV::s and the link::Classes/CVPreset:: or link::Classes/CVInterpolator:: used by the Conductor.)
+
+returns:: an link::Classes/Array:: of link::Classes/Symbol::s
+
+subsection:: Player related methods
+
+METHOD:: stop
+
+METHOD:: play
+
+METHOD:: pause
+
+METHOD:: resume
+
+METHOD:: action
+Adds an link::Classes/ActionPlayer:: which responds to code::play::, code::stop::, code::pause::, and code::resume:: by evaluating the corresponding function with the Conductor as link::Classes/Environment#.currentEnvironment#currentEnvironment::.
+
+code::
+// action_ can control any kind of user program,
+
+(
+c = Conductor.make { |conductor, freq, db, dur |
+	freq.spec_(\freq);
+	db.spec_(\db, -10);
+	dur.sp(0.2, 0.05, 1, 0, 'exp');
+
+	// add a pattern using actions,
+	// notice the use of ~pat, an environment variable
+	// within the Conductor
+
+	conductor.action_(
+		{ ~pat = Pbind(*[freq: freq * 2, db: db, dur: dur/2]).play(quant: 0) },
+		{ ~pat.stop },
+		{ ~pat.pause},
+		{ ~pat.resume}
+	);
+
+	conductor.name_("test");
+};
+
+c.show;
+)
+::
+
+ARGUMENT:: playFunc
+define what shall be played the Conductor
+
+ARGUMENT:: stopFunc
+
+ARGUMENT:: pauseFunc
+
+ARGUMENT:: resumeFunc
+
+
+METHOD:: addActions
+(describe method here)
+
+ARGUMENT:: kv
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: load
+(describe method here)
+
+ARGUMENT:: argPath
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: useMIDI
+(describe method here)
+
+ARGUMENT:: argKeys
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: make
+(describe method here)
+
+ARGUMENT:: func
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: task
+(describe method here)
+
+ARGUMENT:: func
+(describe argument here)
+
+ARGUMENT:: clock
+(describe argument here)
+
+ARGUMENT:: quant
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: noSettings
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: save
+(describe method here)
+
+ARGUMENT:: path
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: usePresets
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: name
+(describe method here)
+
+ARGUMENT:: name
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: buffer
+(describe method here)
+
+ARGUMENT:: ev
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: add
+(describe method here)
+
+ARGUMENT:: name
+(describe argument here)
+
+ARGUMENT:: obj
+(describe argument here)
+
+ARGUMENT:: guiSpec
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: presetKeys
+(describe method here)
+
+ARGUMENT:: keys
+(describe argument here)
+
+ARGUMENT:: argPreset
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: pattern
+(describe method here)
+
+ARGUMENT:: pat
+(describe argument here)
+
+ARGUMENT:: clock
+(describe argument here)
+
+ARGUMENT:: event
+(describe argument here)
+
+ARGUMENT:: quant
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: simpleGUI
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: useSettings
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: addCV
+(describe method here)
+
+ARGUMENT:: name
+(describe argument here)
+
+ARGUMENT:: val
+(describe argument here)
+
+ARGUMENT:: argGui
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: useInterpolator
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: addCVs
+(describe method here)
+
+ARGUMENT:: kv
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: getFile
+(describe method here)
+
+ARGUMENT:: argPath
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: putFile
+(describe method here)
+
+ARGUMENT:: vals
+(describe argument here)
+
+ARGUMENT:: argPath
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: show
+(describe method here)
+
+ARGUMENT:: argName
+(describe argument here)
+
+ARGUMENT:: x
+(describe argument here)
+
+ARGUMENT:: y
+(describe argument here)
+
+ARGUMENT:: w
+(describe argument here)
+
+ARGUMENT:: h
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: synthDef
+(describe method here)
+
+ARGUMENT:: function
+(describe argument here)
+
+ARGUMENT:: cvs
+(describe argument here)
+
+ARGUMENT:: ev
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: synth
+(describe method here)
+
+ARGUMENT:: ev
+(describe argument here)
+
+ARGUMENT:: cvs
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: makeArgs
+(describe method here)
+
+ARGUMENT:: func
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: interpKeys
+(describe method here)
+
+ARGUMENT:: keys
+(describe argument here)
+
+ARGUMENT:: argPreset
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: group
+(describe method here)
+
+ARGUMENT:: ev
+(describe argument here)
+
+ARGUMENT:: cvs
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: init
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: stop
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: controlBus
+(describe method here)
+
+ARGUMENT:: ev
+(describe argument here)
+
+ARGUMENT:: cvs
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: draw
+(describe method here)
+
+ARGUMENT:: win
+(describe argument here)
+
+ARGUMENT:: name
+(describe argument here)
+
+ARGUMENT:: conductor
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: input
+(describe method here)
+
+ARGUMENT:: kvs
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: addCon
+(describe method here)
+
+ARGUMENT:: name
+(describe argument here)
+
+ARGUMENT:: func
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: value
+(describe method here)
+
+ARGUMENT:: kvs
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: addCursor
+(describe method here)
+
+ARGUMENT:: key
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: nodeProxy
+(describe method here)
+
+ARGUMENT:: nodeProxy
+(describe argument here)
+
+ARGUMENT:: args
+(describe argument here)
+
+ARGUMENT:: bus
+(describe argument here)
+
+ARGUMENT:: numChannels
+(describe argument here)
+
+ARGUMENT:: group
+(describe argument here)
+
+ARGUMENT:: multi
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: midiKBD
+(describe method here)
+
+ARGUMENT:: noteOnFunction
+(describe argument here)
+
+ARGUMENT:: midiChan
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::
