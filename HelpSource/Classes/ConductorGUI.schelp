@@ -1,0 +1,138 @@
+TITLE:: ConductorGUI
+summary:: An Environment, determining how a Conductor is displayed
+categories:: Conductor, GUI, Quarks
+related:: Classes/Conductor, Classes/Environment, Classes/GUIEvent
+
+DESCRIPTION::
+ConductorGUI is an link::Classes/Enivronment:: whose parent environment (defined by link::Classes/GUIEvent::) is a 'style sheet' of default gui functions that determine how a link::Classes/Conductor:: is to be displayed.
+
+CLASSMETHODS::
+
+METHOD:: new
+Called internally when a new link::Classes/Conductor:: gets instantiated. Usually doesn't need to be called by the user directly.
+
+ARGUMENT:: conductor
+
+ARGUMENT:: keys
+
+METHOD:: osx
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: initClass
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+subsection:: Instance Variables
+
+METHOD:: conductor
+The conductor to be displayed
+
+METHOD:: keys
+An link::Classes/Array:: of keys and arrays of keys of items in the Conductor to be displayed. Each item in the array is displayed on its own line, so arrays of keys share a line. Unless overridden in guis each item identified by a key is sent a link::Classes/Conductor#-draw#draw:: message.
+
+METHOD:: resizeToFit
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: add
+(describe method here)
+
+ARGUMENT:: key
+(describe argument here)
+
+ARGUMENT:: gui
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: stopOnClose
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: reshow
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: guis
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: draw
+(describe method here)
+
+ARGUMENT:: win
+(describe argument here)
+
+ARGUMENT:: name
+(describe argument here)
+
+ARGUMENT:: key
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: show
+(describe method here)
+
+ARGUMENT:: argName
+(describe argument here)
+
+ARGUMENT:: x
+(describe argument here)
+
+ARGUMENT:: y
+(describe argument here)
+
+ARGUMENT:: w
+(describe argument here)
+
+ARGUMENT:: h
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: drawItems
+(describe method here)
+
+ARGUMENT:: win
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: addKeys
+(describe method here)
+
+ARGUMENT:: newKeys
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: resize
+(describe method here)
+
+ARGUMENT:: pt
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+METHOD:: header
+(describe method here)
+
+returns:: (describe returnvalue here)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::
