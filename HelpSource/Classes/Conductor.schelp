@@ -147,7 +147,6 @@ METHOD:: resume
 
 METHOD:: action
 Adds an link::Classes/ActionPlayer:: which responds to code::play::, code::stop::, code::pause::, and code::resume:: by evaluating the corresponding function with the Conductor as link::Classes/Environment#.currentEnvironment#currentEnvironment::.
-note::The method needs a trailing underscore when being called: code::action_(...):: ::
 
 code::
 // action_ can control any kind of user program,
@@ -187,7 +186,6 @@ ARGUMENT:: resumeFunc
 
 METHOD:: task
 Adds a link::Classes/TaskPlayer:: which plays the function within a link::Classes/Task:: scheduled by the specified link::Classes/Clock:: and quantization. (On stop, tasks that block on a message port are also be deleted.)
-note::The method needs a trailing underscore when being called: code::task_(...):: ::
 
 ARGUMENT:: func
 a link::Classes/Function::
@@ -202,7 +200,6 @@ a link::Classes/Quant:: object: a link::Classes/SimpleNumber::, an link::Classes
 
 METHOD:: pattern
 Adds a link::Classes/PatternPlayer:: which plays the link::Classes/Pattern:: with the specified event, clock and quantization.
-note::The methods needs a trailing underscore when being called: code::pattern_(...):: ::
 
 code::
 // but convenience methods such as pattern_  are more concise
@@ -238,7 +235,6 @@ a link::Classes/Quant:: object: a link::Classes/SimpleNumber::, an link::Classes
 
 METHOD:: nodeProxy
 Adds a link::Classes/NodeProxyPlayer::, which uses the following code::bus::, code::numChannels::, and code::group:: if specified, otherwise uses default values. See link::Classes/NodeProxy:: for details.
-note::The methods needs a trailing underscore when being called: code::nodeProxy_(...):: ::
 
 code::
 (
@@ -275,7 +271,6 @@ a link::Classes/Boolean::, indicating whether the NodeProxy shall keep old playb
 
 METHOD:: synth
 Control a link::Classes/Synth:: through a Conductor
-note::The methods needs a trailing underscore when being called: code::synth_(...):: ::
 
 code::
 // Controlling a synth
@@ -367,7 +362,6 @@ ARGUMENT:: cvs
 an link::Classes/Array::, denoting the controls used in the Conductor
 
 METHOD:: controlBus
-note::The methods needs a trailing underscore when being called: code::controlBus_(...):: ::
 
 ARGUMENT:: ev
 an link::Classes/Event::, specifiing
@@ -380,7 +374,6 @@ ARGUMENT:: cvs
 an link::Classes/Array:: of link::Classes/CV::s that are used to determine the value of consecutive link::Classes/Bus::es
 
 METHOD:: buffer
-note::The methods needs a trailing underscore when being called: code::buffer_(...):: ::
 
 ARGUMENT:: ev
 an link::Classes/Event::, designed primarily for small waveform buffers, specifiing:
@@ -440,7 +433,6 @@ A link::Classes/CVPreset:: saves 'presets' for an array of link::Classes/CV::s o
 
 METHOD:: presetKeys
 The objects at the keys will have their settings saved and restored by preset, which defaults to the object in the preset instance variable.
-note::The methods needs a trailing underscore when being called: code::presetKeys_(...):: ::
 
 ARGUMENT:: keys
 an link::Classes/Array:: of link::Classes/Symbol::s
@@ -456,7 +448,6 @@ A link::Classes/CVInterpolator:: will set a specified set of link::Classes/CV::s
 
 METHOD:: interpKeys
 The objects at the keys (which must be a subset of the link::#-valueKeys#valueKeys:: of the link::#-preset#preset::) can have their settings interpolated between preset values.
-note::The methods needs a trailing underscore when being called: code::interpKeys_(...):: ::
 
 ARGUMENT:: keys
 an link::Classes/Array:: of link::Classes/Symbol::s
@@ -524,7 +515,7 @@ a link::Classes/Symbol::, denoting the name of the view in which the CVshall app
 
 code::
 c = Conductor.make { | conductor, a, b, c, d |  };
-c.gui // -> -> ConductorGUI[ (win -> a Window) ]
+c.gui // -> ConductorGUI[ (win -> a Window) ]
 ::
 
 returns:: a link::Classes/CV::
@@ -539,7 +530,6 @@ an link::Classes/Array:: of link::Classes/Symbol::s
 
 METHOD:: midiKBD
 The function receives a key number and velocity value and returns an object that responds to release (typically a link::Classes/Synth::). If code::midiChan:: is code::nil::, it responds to MIDI key commands from all channels in "omni" mode. See also: link::Guides/UsingMIDI::.
-note::The methods needs a trailing underscore when being called: code::midiKBD_(...):: ::
 
 ARGUMENT:: noteOnFunction
 a link::Classes/Function::, triggered when a key is played. E.g.:
