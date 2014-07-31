@@ -128,26 +128,12 @@ An instance of link::Classes/CVPreset:: or link::Classes/CVInterpolator::. This 
 
 returns:: a link::Classes/CVPreset:: or link::Classes/CVInterpolator::
 
-METHOD:: path
-Stores the pathname of the file that saves the Conductor's settings and attempts to load those settings.
-code::
-c = Conductor.make { | conductor, a, b, c, d |  };
-
-// set the path
-c.path_("~/Desktop".standardizePath);
-
-// get the path
-c.path;
-::
-ARGUMENT:: path
-a path to a location on the local harddisk.
-
-returns:: a link::Classes/String:: containing a path to a location on the local harddisk
-
 METHOD:: valueKeys
+
 An array of keys that determine the Conductor's response to value. (Typically includes both individual link::Classes/CV::s and the link::Classes/CVPreset:: or link::Classes/CVInterpolator:: used by the Conductor.)
 
 returns:: an link::Classes/Array:: of link::Classes/Symbol::s
+
 
 subsection:: Player related methods
 
@@ -161,6 +147,7 @@ METHOD:: resume
 
 METHOD:: action
 Adds an link::Classes/ActionPlayer:: which responds to code::play::, code::stop::, code::pause::, and code::resume:: by evaluating the corresponding function with the Conductor as link::Classes/Environment#.currentEnvironment#currentEnvironment::.
+note::The method needs a trailing underscore when being called: code::action_(...):: ::
 
 code::
 // action_ can control any kind of user program,
@@ -198,9 +185,411 @@ ARGUMENT:: pauseFunc
 
 ARGUMENT:: resumeFunc
 
+METHOD:: task
+Adds a link::Classes/TaskPlayer:: which plays the function within a link::Classes/Task:: scheduled by the specified link::Classes/Clock:: and quantization. (On stop, tasks that block on a message port are also be deleted.)
+note::The method needs a trailing underscore when being called: code::task_(...):: ::
+
+ARGUMENT:: func
+a link::Classes/Function::
+
+ARGUMENT:: clock
+a link::Classes/Clock::: e.g. a link::Classes/TempoClock::, link::Classes/AppClock:: or link::Classes/SystemClock:: instance
+
+ARGUMENT:: quant
+a link::Classes/Quant:: object: a link::Classes/SimpleNumber::, an link::Classes/Array:: or code::nil::
+
+(See also: link::Classes/Quant#Automatic instantiation::)
+
+METHOD:: pattern
+Adds a link::Classes/PatternPlayer:: which plays the link::Classes/Pattern:: with the specified event, clock and quantization.
+note::The methods needs a trailing underscore when being called: code::pattern_(...):: ::
+
+code::
+// but convenience methods such as pattern_  are more concise
+(
+c = Conductor.make { |conductor, freq, db, dur |
+	freq.spec_(\freq);
+	db.spec_(\db, -10);
+	dur.sp(0.2, 0.05, 1, 0, 'exp');
+
+	conductor.pattern_(
+		Pbind(*[freq: freq * 2, db: db, dur: dur/2]),
+		quant: 0
+	)
+};
+
+c.show;
+)
+::
+
+ARGUMENT:: pat
+a link::Classes/Pattern::
+
+ARGUMENT:: clock
+a link::Classes/Clock::: e.g. a link::Classes/TempoClock::, link::Classes/AppClock:: or link::Classes/SystemClock:: instance
+
+ARGUMENT:: event
+an link::Classes/Event::
+
+ARGUMENT:: quant
+a link::Classes/Quant:: object: a link::Classes/SimpleNumber::, an link::Classes/Array:: or code::nil::
+
+(See also: link::Classes/Quant#Automatic instantiation::)
+
+METHOD:: nodeProxy
+Adds a link::Classes/NodeProxyPlayer::, which uses the following code::bus::, code::numChannels::, and code::group:: if specified, otherwise uses default values. See link::Classes/NodeProxy:: for details.
+note::The methods needs a trailing underscore when being called: code::nodeProxy_(...):: ::
+
+code::
+(
+a = Conductor.make({ | con, freq1, freq2, widefreq3, db|
+	~np = NodeProxy.audio(Server.default, 2);
+	con.nodeProxy_(~np, [freq1: freq1, freq2: freq2, widefreq3: widefreq3, db: db]);
+
+	~np[0] = { | freq1, freq2, widefreq3, db|
+		Mix(SinOsc.ar([freq1, freq2, widefreq3], 0, db.dbamp))
+	};
+});
+
+a.show
+)
+::
+
+ARGUMENT:: nodeProxy
+a link::Classes/NodeProxy::
+
+ARGUMENT:: args
+an link::Classes/Array:: denoting the arguments to the NodeProxy
+
+ARGUMENT:: bus
+a link::Classes/Bus::
+
+ARGUMENT:: numChannels
+an link::Classes/Integer::
+
+ARGUMENT:: group
+a link::Classes/Group::
+
+ARGUMENT:: multi
+a link::Classes/Boolean::, indicating whether the NodeProxy shall keep old playback links and add a new one or not
+
+METHOD:: synth
+Control a link::Classes/Synth:: through a Conductor
+note::The methods needs a trailing underscore when being called: code::synth_(...):: ::
+
+code::
+// Controlling a synth
+(
+Conductor.make({ arg conductor, freq, volIndB;
+	freq.spec_(\freq);
+	volIndB.sp(-20,-100,20);
+
+	conductor.synth_(
+		(
+			instrument: \default, // this Event is explicitly specifying all the default values
+			addAction: 1,
+			group: 1,
+			server: Server.default
+		),
+		[freq: freq, amp: [volIndB, volIndB.dbamp], pan: -1]
+	);
+}).show
+)
+::
+
+ARGUMENT:: ev
+an link::Classes/Event::
+
+ARGUMENT:: cvs
+an link::Classes/Array::, denoting the controls used in the Conductor
+
+METHOD:: group
+link::Classes/CV::s assigned to a group affect all of the synths within the group. In the following example the CV only alters playing synths, new synths use the default value:
+
+code::
+(
+SynthDef("pm1", { | out, freq, amp, pan, gate = 1,
+ratio1 = 1, index1 = 1, a1 = 0.01, d1 = 0.2, s1 = 0.5, r1 = 1,
+ratio2 = 1, index2 = 1, a2 = 0.01, d2 = 0.2, s2 = 0.5, r2 = 1
+|
+	var audio, env1, env2;
+
+	env1 =	EnvGen.kr(Env.adsr(a1,d1,s1,r1), gate, doneAction: 2) * index1;
+	env2 =	EnvGen.kr(Env.adsr(a2,d2,s2,r2), gate) * index2;
+	audio = PMOsc.ar(freq * ratio1, freq * ratio2, env2, 0, env1);
+	Out.ar(out, Pan2.ar(audio, pan, amp))
+}).add;
+
+Conductor.make{ | con, index2, ratio1, ratio2 |
+	index2.sp(0,0,20);
+
+	// create a whole bunch of groups in sequence
+	con.group_(
+		(id:[2,3,4,5,6,7,8,9], addAction: 1),
+		[index2: index2, ratio1: ratio1, ratio2: ratio2]
+	);
+
+	// play a pattern in one
+	con.pattern_(Pbind(*[
+		instrument: \pm1,
+		degree: Pwhite(0, 10), dur: 0.2, sustain: 2, group: 6,
+		ratio1: ratio1, ratio2: ratio2, index2: index2
+	]))
+}.show
+)
+::
+
+The argument code::cvs:: is an interleaved array of keys and link::Classes/CV::s (or value). CVs can also be altered before being sent to the server and combinations of CVs can determine the value to be sent:
+
+definitionList::
+## value || code::[freq: 440]::
+## CV || code::[freq: aCV]::
+## alteredCV || code::[freq: [aCV, aCV.midicps]]::
+## combination || code::[freq: [[aCV, bCV], aCV.midicps + bCV]]::
+## function || code::[freq: [aCV, { aCV.midicps.value + 33.rand }]::
+::
+
+The link::Classes/Event::s use the same keys as note events in patterns. The keys code::server::, code::group::, and code::addAction:: and, for link::Classes/Synth::s, code::instrument:: determine the link::Classes/Group:: or link::Classes/Synth::. As in link::Classes/Pattern::s, the default values for these keys are:
+
+code::
+server: Server.default,
+group: 1,
+addAction: 0,
+instrument: \default
+::
+
+Usually the node ID of the group or synth is dynamically allocated, but the key id can be set to set the id directly. For group events, a new group  or collection of groups is created with the specified id(s). For synth events, no synths are created, but the control values determined by the event are sent to the specified id(s).
+
+ARGUMENT:: ev
+an link::Classes/Event::, denoting the link::Classes/Group::s to be created
+
+ARGUMENT:: cvs
+an link::Classes/Array::, denoting the controls used in the Conductor
+
+METHOD:: controlBus
+note::The methods needs a trailing underscore when being called: code::controlBus_(...):: ::
+
+ARGUMENT:: ev
+an link::Classes/Event::, specifiing
+table::
+## code::server:: || aServer (defaults to Server.default),
+## code::index:: || (optional)
+::
+
+ARGUMENT:: cvs
+an link::Classes/Array:: of link::Classes/CV::s that are used to determine the value of consecutive link::Classes/Bus::es
+
+METHOD:: buffer
+note::The methods needs a trailing underscore when being called: code::buffer_(...):: ::
+
+ARGUMENT:: ev
+an link::Classes/Event::, designed primarily for small waveform buffers, specifiing:
+
+table::
+## code::server:: || aServer (defaults to Server.default)
+## code::cv:: || a CV that determines the values in the buffer
+## code::msg:: || a symbol that determines how the values are used to fill the buffer. Is is one of: code::\sine1::, code::\cheby::, code::\wave::, or code::\signal::
+## code::display:: || anotherCV. An optional CV used to display the contents of the buffer (as received from the server)
+## code::size:: || integer (defaults to 512 and should not exceed 1024)
+::
+
+subsection::Value related methods
+
+METHOD:: value
+If called as a getter it returns an link::Classes/Array:: of the values of all components identified by link::#-valueKeys::.
+
+If called as a setter (with a trailing underscore) it iterates over the link::Classes/Array:: defined in the argument code::kvs:: assigning the value to be the value of the corresponding component identified by link::#-valueKeys#valueKeys::
+
+ARGUMENT:: kvs
+an link::Classes/Array:: of key/value pairs. E.g.:
+code::
+[[\a, 0], [\b, 0], [\c, 0], [\d, 0], [\preset, [[], nil]]]
+::
+
+returns:: an link::Classes/Array:: of key/value pairs
+
+
+subsection:: Settings, Preset and Interpolator related methods
+
+A Conductor can load a set of initial settings for its contents from a file.
+
+METHOD:: noSettings
+No file controls are displayed.
+
+METHOD:: useSettings
+Allow a single set of settings to be saved to file and restored from file.
+
+METHOD:: path
+Stores the pathname of the file that saves the Conductor's settings and attempts to load those settings.
+code::
+c = Conductor.make { | conductor, a, b, c, d |  };
+
+// set the path
+c.path_("~/Desktop".standardizePath);
+
+// get the path
+c.path;
+::
+ARGUMENT:: path
+a path to a location on the local harddisk.
+
+returns:: a link::Classes/String:: containing a path to a location on the local harddisk
+
+subsection:: Presets
+A link::Classes/CVPreset:: saves 'presets' for an array of link::Classes/CV::s or other objects that respond to code::input:: and code::input_::.
+
+METHOD:: presetKeys
+The objects at the keys will have their settings saved and restored by preset, which defaults to the object in the preset instance variable.
+note::The methods needs a trailing underscore when being called: code::presetKeys_(...):: ::
+
+ARGUMENT:: keys
+an link::Classes/Array:: of link::Classes/Symbol::s
+
+ARGUMENT:: argPreset
+a link::Classes/CVPreset::
+
+METHOD:: usePresets
+Creates a link::Classes/CVPreset::, gives it link::#-valueKeys#valueKeys:: as its default link::#-presetKeys#presetKeys::
+
+subsection:: Interpolator
+A link::Classes/CVInterpolator:: will set a specified set of link::Classes/CV::s to values that derived from interpolating between two presets.
+
+METHOD:: interpKeys
+The objects at the keys (which must be a subset of the link::#-valueKeys#valueKeys:: of the link::#-preset#preset::) can have their settings interpolated between preset values.
+note::The methods needs a trailing underscore when being called: code::interpKeys_(...):: ::
+
+ARGUMENT:: keys
+an link::Classes/Array:: of link::Classes/Symbol::s
+
+ARGUMENT:: argPreset
+a link::Classes/CVPreset::
+
+METHOD:: useInterpolator
+Creates a link::Classes/CVInterpolator::, sets link::#-valueKeys#valueKeys:: to be both link::#-presetKeys#presetKeys:: and link::#-interpKeys#interpKeys::
+
+An example:
+code::
+(
+a = Conductor.make { | con, cv1, cv2, cv3 |
+	// set the value range of cv1
+	cv1.sp(440, 20, 20000, 0, 'exp');
+	// set the value range of cv2
+	cv2.sp(0.1, 0.01, 1, 0, 'exp');
+
+	// we want to use an interpolator
+	con.useInterpolator;
+
+	// we  want to save  cv3 only
+	con.presetKeys_(#[cv3]);
+
+	// we only want to interpolate cv3
+	con.interpKeys = #[cv3];
+	cv3.value = 1/(1..128);
+
+	// save some presets
+	con.preset.addPreset;
+	cv3.value = 1/(1..128).reverse;
+	con.preset.addPreset;
+	con.preset.presetCV.value = 1;
+	// select a preset
+
+	con.task_({
+		// this task is added to the player object
+		loop {
+			// once the player has something to play,
+			// its start button will appear in the GUI
+			con.preset.targetCV.value_(0);
+			100.do {| i | con.preset.interpCV.value_(i/100); cv2.value.wait };
+			con.preset.targetCV.value_(1);
+			100.do {|  i | con.preset.interpCV.value_(i/100); (cv2.value * 2).wait } ;
+		}
+	});
+}.show
+)
+::
+
+subsection:: Adding new CVs
+
+METHOD:: addCV
+Creates a link::Classes/CV:: inserts it at key in the Conductor and appends it to link::#-valueKeys#valueKeys:: and, if it exists, link::Classes/CVPreset#-items#preset items::
+
+ARGUMENT:: name
+a link::Classes/Symbol::, denoting the name under which the CV will be added to the Conductor
+
+ARGUMENT:: val
+a link::Classes/Float:: or an link::Classes/Integer::, setting the initial value of the CV
+
+ARGUMENT:: argGui
+a link::Classes/Symbol::, denoting the name of the view in which the CVshall appear. The view can be determined by calling link::Classes/Conductor#-gui::.
+
+code::
+c = Conductor.make { | conductor, a, b, c, d |  };
+c.gui // -> -> ConductorGUI[ (win -> a Window) ]
+::
+
+returns:: a link::Classes/CV::
+
+subsection:: MIDI related methods
+
+METHOD:: useMIDI
+This will add a set of controls to enable linking individual CVs to MIDI continuous controllers
+
+ARGUMENT:: argKeys
+an link::Classes/Array:: of link::Classes/Symbol::s
+
+METHOD:: midiKBD
+The function receives a key number and velocity value and returns an object that responds to release (typically a link::Classes/Synth::). If code::midiChan:: is code::nil::, it responds to MIDI key commands from all channels in "omni" mode. See also: link::Guides/UsingMIDI::.
+note::The methods needs a trailing underscore when being called: code::midiKBD_(...):: ::
+
+ARGUMENT:: noteOnFunction
+a link::Classes/Function::, triggered when a key is played. E.g.:
+code::
+{ |veloc, num, chan, src|
+    notes[num] = Synth(\default, [\freq, num.midicps,
+        \amp, veloc * 0.00315]);
+}
+::
+
+ARGUMENT:: midiChan
+an link::Classes/Integer::, denoting a MIDI channel
+
+subsection:: GUI related methods
+
+METHOD:: show
+Draw the Conductor within a window named argName at x, y with size w, h.
+
+ARGUMENT:: argName
+a link::Classes/Symbol:: or a link::Classes/String::, denoting the name of the link::Classes/Window:: to be drawn
+
+ARGUMENT:: x
+an link::Classes/Integer::, denoting the x-position on screen
+
+ARGUMENT:: y
+an link::Classes/Integer::, denoting the y-position on screen
+
+ARGUMENT:: w
+an link::Classes/Integer::, denoting the width of the GUI to be drawn
+
+ARGUMENT:: h
+an link::Classes/Integer::, denoting the height of the GUI to be drawn
+
+returns:: a link::Classes/Window::
+
+METHOD:: draw
+Draw the Conductor within the specified window.
+
+ARGUMENT:: win
+a link::Classes/Window:: within which the representation of the Conductor shall be drawn
+
+ARGUMENT:: name
+a link::Classes/Symbol:: or a link::Classes/String::
+
+ARGUMENT:: conductor
+the Conductor object
+
+subsection:: More undocumented instance methods
 
 METHOD:: addActions
-(describe method here)
 
 ARGUMENT:: kv
 (describe argument here)
@@ -215,38 +604,11 @@ ARGUMENT:: argPath
 
 returns:: (describe returnvalue here)
 
-METHOD:: useMIDI
-(describe method here)
-
-ARGUMENT:: argKeys
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: make
 (describe method here)
 
 ARGUMENT:: func
 (describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: task
-(describe method here)
-
-ARGUMENT:: func
-(describe argument here)
-
-ARGUMENT:: clock
-(describe argument here)
-
-ARGUMENT:: quant
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: noSettings
-(describe method here)
 
 returns:: (describe returnvalue here)
 
@@ -258,23 +620,10 @@ ARGUMENT:: path
 
 returns:: (describe returnvalue here)
 
-METHOD:: usePresets
-(describe method here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: name
 (describe method here)
 
 ARGUMENT:: name
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: buffer
-(describe method here)
-
-ARGUMENT:: ev
 (describe argument here)
 
 returns:: (describe returnvalue here)
@@ -293,59 +642,7 @@ ARGUMENT:: guiSpec
 
 returns:: (describe returnvalue here)
 
-METHOD:: presetKeys
-(describe method here)
-
-ARGUMENT:: keys
-(describe argument here)
-
-ARGUMENT:: argPreset
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: pattern
-(describe method here)
-
-ARGUMENT:: pat
-(describe argument here)
-
-ARGUMENT:: clock
-(describe argument here)
-
-ARGUMENT:: event
-(describe argument here)
-
-ARGUMENT:: quant
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: simpleGUI
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: useSettings
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: addCV
-(describe method here)
-
-ARGUMENT:: name
-(describe argument here)
-
-ARGUMENT:: val
-(describe argument here)
-
-ARGUMENT:: argGui
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: useInterpolator
 (describe method here)
 
 returns:: (describe returnvalue here)
@@ -377,26 +674,6 @@ ARGUMENT:: argPath
 
 returns:: (describe returnvalue here)
 
-METHOD:: show
-(describe method here)
-
-ARGUMENT:: argName
-(describe argument here)
-
-ARGUMENT:: x
-(describe argument here)
-
-ARGUMENT:: y
-(describe argument here)
-
-ARGUMENT:: w
-(describe argument here)
-
-ARGUMENT:: h
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: synthDef
 (describe method here)
 
@@ -411,43 +688,10 @@ ARGUMENT:: ev
 
 returns:: (describe returnvalue here)
 
-METHOD:: synth
-(describe method here)
-
-ARGUMENT:: ev
-(describe argument here)
-
-ARGUMENT:: cvs
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: makeArgs
 (describe method here)
 
 ARGUMENT:: func
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: interpKeys
-(describe method here)
-
-ARGUMENT:: keys
-(describe argument here)
-
-ARGUMENT:: argPreset
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: group
-(describe method here)
-
-ARGUMENT:: ev
-(describe argument here)
-
-ARGUMENT:: cvs
 (describe argument here)
 
 returns:: (describe returnvalue here)
@@ -459,31 +703,6 @@ returns:: (describe returnvalue here)
 
 METHOD:: stop
 (describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: controlBus
-(describe method here)
-
-ARGUMENT:: ev
-(describe argument here)
-
-ARGUMENT:: cvs
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: draw
-(describe method here)
-
-ARGUMENT:: win
-(describe argument here)
-
-ARGUMENT:: name
-(describe argument here)
-
-ARGUMENT:: conductor
-(describe argument here)
 
 returns:: (describe returnvalue here)
 
@@ -506,14 +725,6 @@ ARGUMENT:: func
 
 returns:: (describe returnvalue here)
 
-METHOD:: value
-(describe method here)
-
-ARGUMENT:: kvs
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: addCursor
 (describe method here)
 
@@ -522,43 +733,155 @@ ARGUMENT:: key
 
 returns:: (describe returnvalue here)
 
-METHOD:: nodeProxy
-(describe method here)
 
-ARGUMENT:: nodeProxy
-(describe argument here)
+subsection:: Conductor Internals
 
-ARGUMENT:: args
-(describe argument here)
+The basic components of a Conductor are:
 
-ARGUMENT:: bus
-(describe argument here)
+numberedlist::
+## link::Classes/ConductorPlayer::, which can play, stop, pause, and resume an arbitrary collection of link::Classes/Task::s, link::Classes/Synth::s, link::Classes/Pattern::s, and link::Classes/NodeProxy::s as well as allocate and deallocate resources such as link::Classes/Buffer::s and link::Classes/Bus::es.
 
-ARGUMENT:: numChannels
-(describe argument here)
+By default a Conductor has a single player, but it can be readily configured to have several.
 
-ARGUMENT:: group
-(describe argument here)
+## link::Classes/CV::, which defines a control value or array of control values constrained to a specific range of values by a link::Classes/ControlSpec::. The value of a CV can be set directly or as an input ranging from 0 to 1 rescaled to the CV's range.  CVs provide methods to connect to GUI elements, server nodes, buses, and buffers and may be used directly in Pattern definitions. link::Classes/SV:: (symbolic value), link::Classes/EV:: (envelope value), and link::Classes/TV:: (text value) are classes derived from CV which provide similar interfaces.
 
-ARGUMENT:: multi
-(describe argument here)
+Typically, a Conductor has multiple CV's.
 
-returns:: (describe returnvalue here)
+## link::Classes/ConductorGUI::, which defines the GUI representation of the Conductor.
 
-METHOD:: midiKBD
-(describe method here)
+## link::Classes/CVPreset::, which saves the values of a user specified collection of components into selectable presets. link::Classes/CVInterpolator:: is a preset that also provides the ability to interpolate between presets.
 
-ARGUMENT:: noteOnFunction
-(describe argument here)
+## strong::Conductor:: - one Conductor can be a component of another, providing hierarchical control. Conductor has the instance variables player, gui, and preset which respectively default to a link::Classes/ConductorPlayer::, a link::Classes/ConductorGUI::, and a link::Classes/CVPreset::.
 
-ARGUMENT:: midiChan
-(describe argument here)
-
-returns:: (describe returnvalue here)
-
+The messages code::spec_(specName, default):: and code::sp(default, lo, hi, step, warp):: can be used to set the range of values a link::Classes/CV:: can assume. CVs may be given a single value or an link::Classes/Array:: of values as default value. See examples below.
+::
 
 EXAMPLES::
 
 code::
-(some example code)
+(
+a = Conductor.new; // create the conductor
+a.addCV(\cv1);	// add some CVs
+a.addCV(\cv2);
+a.addCV(\cv3);
+
+w = a.show;  // display it
+// following line will throw an Error if
+// not using Cocoa or SC version < 3.7
+// defer( { Document.current.front}, 0.05);
+)
+
+(
+a[\cv1].sp(440, 20, 20000, 0, 'exp'); // set the range of cv1
+a[\cv2]	.sp(0.1, 0.01, 1, 0, 'exp'); // now cv2
+)
+
+(
+w.close; // close the display window
+
+defer({
+	a[\cv3].value = 1/(1..128);	// and change cv3 to represent an array
+	w = a.show
+}, 0.1); // and show it now
+)
+
+(
+w.close;
+defer({
+	a.useInterpolator; // add the use of an interpolator
+	a[\cv3].value = 1/(1..128); a.preset.addPreset;	// save some presets
+	a[\cv3].value = 1/(1..128).reverse; a.preset.addPreset;
+	a.preset.presetCV.value_(0);
+	w = a.show;
+
+	// following line will throw an Error if
+	// not using Cocoa or SC version < 3.7
+	// Document.current.front;
+}, 0.1);
+)
+
+(
+Task { // interpolate between the presets
+	loop {
+		a.preset.targetCV.value_(1);
+		100.do {|  i | a.preset.interpCV.value_(i/100); 0.01.wait };
+		a.preset.targetCV.value_(0);
+		100.do {|  i | a.preset.interpCV.value_(i/100); 0.02.wait };
+	}
+}.play(AppClock);
+)
+
+w.close;
+
+// Changing CV ranges
+(
+c = Conductor.make { |conductor, a, b, c, d |
+	a.spec_(\freq);
+	b.spec_(\freq, 880);
+	c.sp(1, 0, 15, 1);
+	// a spec with an array given as default value
+	// will result in a MultiSlider in the GUI
+	d.spec_(\unipolar, 1/(1..128));
+};
+
+c.show;
+)
+
+// Controlling a Pattern and a Group
+// 'vol' is assigned to both the Pattern and the Pattern's group
+// this provides continuous control of the pattern's notes as they are sounding
+(
+b = Conductor.make({ arg conductor, freq, vol;
+	freq.spec_(\freq);
+	vol.sp(-20,-100,20);
+	conductor.name_("a group used to control a pattern's synths");
+	conductor.group_((id: [22], group: 0, addAction: 1), [amp: [vol, vol.dbamp], freq: freq]);
+	conductor.pattern_(
+		Pbind(
+			\freq, Prand([1, 3/2, 5/4, 7/4], inf) * freq + Ptuple([Pwhite(-1.0,1),Pwhite(-1.0,1)]),
+			\db, vol,
+			\dur, Prand([0.2, 1.2],inf),
+			\group, 22,
+			\legato, 10
+		),
+		quant:0
+	)
+})
+
+b.show;
+)
+
+// Using a Buffer and interpolation
+(
+c = Conductor.make({ arg conductor,  freq, vol, overtones, waveform;
+	var buf;
+	freq.spec_(\freq);
+	vol.sp(-20,-100,20);
+	overtones.sp(1/(1..64),0, 1);
+	waveform.spec_(\bipolar, Array.fill(512,0));
+
+	SynthDef("osc", { |out = 0, freq = 200, amp = 0.1, bufnum |
+		Out.ar(out, Osc.ar(bufnum, freq, 0, amp) )
+	}).add;
+
+	conductor.name_("synth");
+	conductor.buffer_(buf = (msg: \sine1, cv: overtones, display: waveform));
+	b = buf;
+
+	conductor.synth_(
+		a = (instrument: \osc),
+		[
+			freq: [freq, freq * 3/2],
+			amp: [vol, vol.dbamp],
+			bufnum: { buf.bufnum }
+		]
+	)
+});
+
+c.valueKeys_(#[overtones]);
+c.useInterpolator;
+
+//	c.usePresets;
+d = c.show;
+)
 ::
