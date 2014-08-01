@@ -28,13 +28,33 @@ returns:: (describe returnvalue here)
 
 INSTANCEMETHODS::
 
+METHOD:: draw
+Called internally when items of a link::Classes/Conductor:: are drawn in a given window
+
+ARGUMENT:: win
+
+ARGUMENT:: name
+
+ARGUMENT:: key
+
 subsection:: Instance Variables
 
 METHOD:: conductor
 The conductor to be displayed
 
 METHOD:: keys
-An link::Classes/Array:: of keys and arrays of keys of items in the Conductor to be displayed. Each item in the array is displayed on its own line, so arrays of keys share a line. Unless overridden in guis each item identified by a key is sent a link::Classes/Conductor#-draw#draw:: message.
+An link::Classes/Array:: of keys and arrays of keys of items in the Conductor to be displayed. Each item in the array is displayed on its own line, so arrays of keys share a line. Unless overridden in guis each item identified by a key is sent a link::#-draw#draw:: message.
+
+METHOD:: header
+An link::Classes/Array:: of keys of items to be displayed before those in keys. Defaults to code::#[player, settings, preset]::
+
+METHOD:: guis
+An link::Classes/IdentityDictionary:: of gui functions that override the normal link::#-draw#draw:: method of an item in the Conductor
+
+METHOD:: stopOnClose
+Flag determines if link::Classes/Conductor:: is stopped when gui window is closed. Set to code::true:: by default calling link::#-new#new::.
+
+subsection:: More (undocumented) Instance Methods
 
 METHOD:: resizeToFit
 (describe method here)
@@ -52,32 +72,8 @@ ARGUMENT:: gui
 
 returns:: (describe returnvalue here)
 
-METHOD:: stopOnClose
-(describe method here)
-
-returns:: (describe returnvalue here)
-
 METHOD:: reshow
 (describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: guis
-(describe method here)
-
-returns:: (describe returnvalue here)
-
-METHOD:: draw
-(describe method here)
-
-ARGUMENT:: win
-(describe argument here)
-
-ARGUMENT:: name
-(describe argument here)
-
-ARGUMENT:: key
-(describe argument here)
 
 returns:: (describe returnvalue here)
 
@@ -125,14 +121,80 @@ ARGUMENT:: pt
 
 returns:: (describe returnvalue here)
 
-METHOD:: header
-(describe method here)
+subsection:: Using ConductorGUI
 
-returns:: (describe returnvalue here)
+ConductorGUI defines default gui functions for the most commonly used classes within a link::Classes/Conductor:::
+
+code::
+cvGUI			// ~nslider, for single-valued CV's
+multicvGUI		// ~multislider, for multi-valued CV's
+svGUI			// ~popup, for SV's
+settingsGUI		// for ConductorSettingsGUI
+presetGUI		// for CVPreset
+interpolatorGUI	// for CVInterpolator
+::
+
+The dictionary in guis can redefine how a particular key is to be drawn. Entries in this dictionary can be:
+
+definitionList::
+## a link::Classes/Symbol:: || the symbol selects a gui function defined in ConductorGUI,
+## an link::Classes/Array:: || the first element of the array selects the gui function which is used to draw the remaining elements of the array.
+## a link::Classes/Function:: || the function receives window, name and code::Conductor[name]:: as arguments.
+::
+
+See the link::#examples:: section for some examples on how to use these features.
 
 
 EXAMPLES::
 
 code::
-(some example code)
+// Default case
+c = Conductor.make { | conductor, a, b, c, d| }.show
+
+// Redefine default GUI, place items on one line
+(
+c = Conductor.make { | conductor, a, b, c, d|
+	conductor.gui.use { ~cvGUI = ~knob };	// change default GUI
+	conductor.gui.keys = #[[a, b, c, d]];	// place them in a single row
+}.show
+)
+
+// Override default GUI
+(
+c = Conductor.make { | conductor, a, b, c, d|
+	conductor.gui.guis = (vsliders: [\vslider, a, b, c, d]);
+	conductor.gui.keys = #[vsliders];	// place them in a single row
+}.show
+)
+
+// Use dummy keys to display CVs many different ways
+(
+c = Conductor.make { | conductor, a, b|
+	a.sp(0, 0, 16, 1);
+	b.sp(200, 20, 20000, 0, 'exp');
+
+	// note: the fields below are defined in the environment of the conductor,
+	// but the functions are actually evaluated in the environment of conductor.gui
+	conductor.gui.guis = (
+		b: \numerical,
+		c: [\rslider, [a, b] ],
+		d: [\vslider, a, b, a, b],
+		e: [\vrslider, [a, b], [a, b]],
+		f: [\tdslider, [a, b],[a, b]],
+		g: [\numerical, a, b],
+		h: [\radiobuttons, a],
+		zz: {| win, name, cv |
+			// using functions defined in GUIEvent
+			~numerical.value(win, name, [a, b, a, b, a, b]);
+			// writing GUI function directly
+			a.connect(Slider(win, Rect(0, 0, 100, 20)));
+		}
+	);
+
+	// define the order of displaying those items
+	conductor.gui.keys = #[a,b,c, [d, e, f], g, h, zz];
+};
+
+c.show(w: 1000)
+)
 ::
