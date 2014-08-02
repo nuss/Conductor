@@ -186,7 +186,7 @@ ListView-connect(aCV)	// for SVs
 
 One CV can be connected to many views but each view is connected to only one CV. When a CV's value changes, it is relayed to all of its dependants including the source of the the change. That way, the GUI accurately reflects the new value of the CV. See the behavior of 'b' in the following example.
 
-emphasis::
+note::
 The following example provides a generic graphic interface to two CVs. Subsequent examples depend on that window, so leave it open until you are finished working through the help file. (The interpreter variables 'a' and 'b' contain the CVs used by the examples, so they should be left unaltered.)
 ::
 
@@ -235,6 +235,199 @@ c.connect(m);
 c.action_({ |cv| "the value of c is now %\n".postf(cv.value) });
 )
 ::
+
+subsection:: Server connections
+
+OSC commands (i.e., code::/n_set::,  code::/s_new::) specify initial values of parameters as a flat link::Classes/Array:: of pairs consisting of a name and its initial value:
+
+code::
+[frequency: 440, amplitude: 1, ...]
+::
+
+"Extended argument arrays" allow CVs to be used in place of the initial value. This is the standard syntax for establishing connections between CVs and a server. In an extended argument array, the CV's value can be altered before being sent, multiple CV's can determine the value to be sent, and the value to be sent can be determined by a function (here code::freq:: is just meant as an example key):
+
+table::
+## strong::value:: || [freq: 440]
+## strong::CV:: || [freq: aCV]
+## strong::altered CV:: || [freq: [aCV, aCV.midicps]]
+## strong::combination:: || [freq: [[aCV, bCV], aCV.midicps + bCV]]
+## strong::function:: || code::[freq: [aCV, { aCV.midicps.value + 33.rand }]::
+::
+
+For example, the method link::Classes/Synth#*controls:: is identical to link::Classes/Synth#*new:: except the code::args:: parameter is extended:
+
+code::
+// basic CV connection
+(
+Synth.controls("default", [
+	freq: a
+]);
+)
+
+// modified CV connection
+(
+Synth.controls("default", [
+	amp: [b, b.dbamp],
+	freq: a
+]);
+)
+
+// multiple modified connection
+(
+Synth.controls("default", [
+	freq: [
+		[a,b], a + b
+	],
+	amp: [
+		[a,b], (a.cpsmidi.neg/4 + b).dbamp
+	]
+]);
+)
+::
+
+In the previous two examples, the modifying expression is actually a combination of link::Classes/Stream::s altered with link::Overviews/Operators#Binary Operators#binary:: and link::Overviews/Operators#Unary Operators#unary operators::. This is concise, but in some cases, it may be necessary to use a link::Classes/Function:: to define the modification.
+note::Within a function definition it is necessary to explicitly extract the value of the CV using a link::Classes/CV#-value#value:: message.::
+
+code::
+// a Function modifying the CV connection
+(
+Synth.controls("default", [
+	freq: [b, {
+		var index;
+		(index = b.value + 100 /12 ).asInteger;
+		[100,200,300,400,500, 600].mirror.at(index)
+	}],
+	amp: [
+		[a,b], { (a.value.cpsmidi.neg/4 + b.value).dbamp }
+	]
+])
+)
+::
+
+subsection:: Summary of Node related connection methods
+
+definitionList::
+## Array ||
+link::Classes/Array#-connectToNode::: the receiver is a flat array of name/value pairs
+
+link::Classes/Array#-connectToBuffer::: the receiver is an array of CVs
+
+link::Classes/Array#-connectToBus::: the receiver is an array of CVs.
+## Node ||
+link::Classes/Node#-setControls::: connects CVs to named controls
+## NodeProxy ||
+link::Classes/NodeProxy#-setControls::: connects CVs to named controls
+code::
+(
+c = CV.new.sp(-20, -100, 120);
+p = NodeProxy.audio(s, 2);
+p.play; //play to hardware output, return a group with synths
+p.setControls([f: a, c: [b, { \freq.asSpec.map(b.input)}]]);
+b.input_(0.5);
+p.source = { arg f=400, c = 400; PMOsc.ar(f , c, 4, 0, 0.1) };
+)
+::
+## Synth ||
+link::Classes/Synth#*controls::: the same as link::Classes/Synth#*new:: but allows CVs to be used in the args array
+## Bus ||
+link::Classes/Bus#*controls:::
+code::
+(
+c = { arg f = 400,  a = -20, pan = 0; Pan2.ar(SinOsc.ar(f, 0, a.dbamp), pan) }.play;
+d = Bus.controls([a, b], s);
+[a, b].connectToBus(d.server, d.index);
+Routine({
+	// need to make sure the synth has been created...
+	s.sync;
+	c.map(\f, d.index, \a, d.index + 1);
+}).play;
+)
+::
+link::Classes/Bus#-setControls::: connects CVs to consecutive buses
+code::
+(
+c = { arg f = 400, a = -20, pan = 0; Pan2.ar(SinOsc.ar(f, 0, a.dbamp), pan) }.play;
+d = Bus.control(s, 3);
+d.setControls([a, b]);
+[a, b].connectToBus(d.server, d.index);
+Routine({
+	// need to make sure the synth has been created...
+	s.sync;
+	c.map(\f, d.index, \a, d.index + 1);
+}).play;
+)
+::
+::
+
+subsection:: Reading and writing CVs in functions and patterns
+
+definitionList::
+## Tasks ||
+Within a link::Classes/Function::, CVs are accessed using link::#-value#value:: and link::#-input#value:: and altered using link::#-value#value_:: and link::#-input#input_::.
+
+code::
+(
+Task({
+	10.do({
+		// print the value scaled to the range [0, 1]
+		a.input.post; " ".post;
+		// print the actual value
+		a.value.postln;
+		// select a new value at random
+		a.input_(1.0.rand);
+		// the weighting of values will conform to the warp
+		// with \exp, values fall uniformly in each octave
+		wait(0.1);
+	})
+}).play(AppClock)
+)
+::
+## Patterns ||
+Within a pattern definition, a CV can directly substitute for a link::Classes/Pattern:::
+
+code::
+(
+SynthDescLib.global.read;
+Pbind(
+	\instrument, \default,
+	\freq, a,
+	\db, b,
+	\dur, 0.2
+).play(quant: 0);
+)
+::
+
+link::Classes/Pfunc:: can be used to change the CV from within a Pattern:
+code::
+(
+SynthDescLib.global.read;
+Pbind(
+	\instrument, \default,
+	\freq, Pwhite(100, 1000).round(100),
+	\placeholder, Pfunc({ arg ev; a.value_(ev.at(\freq)) }),
+	\db, b,
+	\dur, 0.2
+).play;
+)
+::
+::
+
+subsection:: CVs and external input
+
+The link::#-input#input_(in):: method makes it easy to connect a CV to any control source:
+
+code::
+// MIDI
+(
+MIDIClient.init;
+MIDIIn.connect(0, 0);
+MIDIIn.control = { arg src, chan, num, val;	a.input_(val/127) }
+)
+::
+
+The methods link::#-input#input and input_:: are also used by link::Classes/CVPreset:: to allow interpolations between settings that follow warp of the CV's link::Classes/ControlSpec::.
+
+subsection:: more undocumented methods
 
 METHOD:: put
 (describe method here)

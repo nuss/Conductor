@@ -1,0 +1,45 @@
+classmethods::
+
+method:: controls
+Allocate a Bus that can be controlled by link::Classes/CVs::
+
+code::
+(
+c = { arg f = 400,  a = -20, pan = 0; Pan2.ar(SinOsc.ar(f, 0, a.dbamp), pan) }.play;
+d = Bus.controls([a, b], s);
+[a, b].connectToBus(d.server, d.index);
+Routine({
+	// need to make sure the synth has been created...
+	s.sync;
+	c.map(\f, d.index, \a, d.index + 1);
+}).play;
+)
+::
+
+argument:: args
+an link::Classes/Array:: of link::Classes/CV::s
+
+argument:: server
+a link::Classes/Server:: object
+
+instancemethods::
+
+method:: setControls
+Connects link::Classes/CV::s to consecutive buses
+
+code::
+(
+c = { arg f = 400, a = -20, pan = 0; Pan2.ar(SinOsc.ar(f, 0, a.dbamp), pan) }.play;
+d = Bus.control(s, 3);
+d.setControls([a, b]);
+[a, b].connectToBus(d.server, d.index);
+Routine({
+	// need to make sure the synth has been created...
+	s.sync;
+	c.map(\f, d.index, \a, d.index + 1);
+}).play;
+)
+::
+
+argument:: arrayOfControlValues
+usually an link::Classes/Array:: of link::Classes/CV::s

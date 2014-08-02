@@ -1,0 +1,32 @@
+instancemethods::
+
+method:: connectToNode
+The receiver is a flat array of name/value pairs. See link::Classes/CV#Server connections:: for some applicabable examples.
+
+argument:: server
+an instance of link::Classes/Server:: (i.e. the server on which the link::Classes/Synth:: is playing)
+
+argument:: nodeID
+an link::Classes/Integer::, representing the nodeID of a link::Classes/Synth:: instance
+
+
+method:: connectToBuffer
+The receiver is an array of link::Classes/CVs::.
+
+argument:: server
+an instance of link::Classes/Server:: (i.e. the server on which the link::Classes/Buffer:: has been initialized)
+
+argument:: bufferNumber
+the buffer number of corresponding server-side buffer, returned by calling link::Classes/Buffer#-bufnum#bufnum:: on its language-side representation.
+
+
+method:: connectToBus
+The receiver is an array of link::Classes/CV::.
+
+argument:: server
+an instance of link::Classes/Server:: (i.e. the server on which the link::Classes/Bus:: has been initialized)
+
+argument:: busIndex
+the bus index of the corresponding link::Classes/Bus::, either returned by calling link::Classes/Bus#-index#index:: on the language-side representation of the bus or the language-side representation of the bus itself
+
+

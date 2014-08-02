@@ -1,0 +1,7 @@
+instancemethods::
+
+method:: setControls
+Connects link::Classes/CV::s to named controls.
+
+argument:: args
+an link::Classes/Array:: of key/value pairs where keys represent the control-names and the values the CVs that are supposed to set values of the controls

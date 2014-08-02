@@ -1,0 +1,14 @@
+classmethods::
+
+method:: controls
+The same as link::#*new:: but allows link::Classes/CV::s to be used in the args array. See link::#*new:: for a comprehensive explanation of the method.
+
+argument:: defName
+the link::Classes/SynthDef::'s name
+
+argument:: args
+an optional link::Classes/Array:: specifying initial values for the link::Classes/SynthDef::'s arguments (controls).
+
+argument:: target
+
+argument:: addAction
