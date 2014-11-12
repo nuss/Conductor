@@ -138,14 +138,14 @@ returns:: the value indexed by code::key::
 
 subsection:: CV connections using SimpleControllers
 
-When a CV's value is changed a changed message (with code::\synch:: as the identifier) is send to update any dependant objects. For example, code::action_(function):: creates a link::Classes/SimpleController:: which is added to the dependants of the CV and evaluated whenever the CV changes value. This same basic mechanism is used to connect the CV to GUIs, server, objects, and some other objects in the language. Most of this is more or less hidden from view.
+When a CV's value is changed a changed message (identified by the symbol code::\synch::) is send to update any dependant objects. For example, code::action_(function):: creates a link::Classes/SimpleController:: which is added to the dependants of the CV and evaluated whenever the CV changes value. This same basic mechanism is used to connect the CV to GUIs, server, objects, and some other objects in the language. Most of this is more or less hidden from view.
 
 Under normal circumstances, CV connections are automatically removed when the targeted link::Classes/Control::, link::Classes/Bus:: or link::Classes/View:: is deleted. If there is a program error, it is possible that connections will persist and will need to be explicitly removed.
 
 METHOD:: action
 Create a dependant SimpleController that evaluates the function whenever the CV's value is altered.
 
-note::Though the method appears as setter emphasis::and:: getter it is emphasis::not:: a getter/setter in terms of sclang. calling code::action:: as getter will throw an error!::
+note::Though the method seems to be a setter emphasis::and:: getter it is emphasis::not:: in terms of sclang. calling code::action:: as getter will throw an error!::
 
 code::
 a = CV(\freq);
@@ -232,7 +232,7 @@ x = Window("CV MultiSlider Demo", Rect(100, 100, 400, 300)).front;
 x.view.decorator = f = FlowLayout(x.view.bounds);
 m = MultiSliderView(x, f.innerBounds.width@f.innerBounds.height);
 c.connect(m);
-c.action_({ |cv| "the value of c is now %\n".postf(cv.value) });
+c.action_({ |cv| "the CV's value is now %\n".postf(cv.value) });
 )
 ::
 
