@@ -71,8 +71,6 @@ CV : Stream {
 		var connectDictionary = (
 			numberBox:		CVSyncValue,
 			slider:			CVSyncInput,
-			rangeSlider:		CVSyncProps(#[lo, hi]),
-			slider2D:			CVSyncProps(#[x, y]),
 			multiSliderView:	CVSyncMulti,
 			popUpMenu:		SVSync,
 			listView:			SVSync,
@@ -85,6 +83,17 @@ CV : Stream {
 			textField:		CVSyncText,
 			staticText:		CVSyncText,
 		);
+
+		if (GUI.id == \qt) {
+			connectDictionary.rangeSlider = CVSyncProps(#[loValue, hiValue]);
+			connectDictionary.slider2D = CVSyncProps(#[xValue, yValue]);
+		} {
+			connectDictionary.rangeSlider = CVSyncProps(#[lo, hi]);
+			connectDictionary.slider2D = CVSyncProps(#[x, y]);
+		};
+
+		connectDictionary.pairsDo { |k, v| [k, v].postln };
+
 		CV.viewDictionary = IdentityDictionary.new;
 
 		GUI.schemes.do { | gui|
