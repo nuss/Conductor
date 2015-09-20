@@ -81,17 +81,21 @@ CV : Stream {
 			ezNumber:			CVSyncValue,
 			knob:			CVSyncInput,
 			button:			CVSyncValue,
+			textView:		CVSyncText,
+			textField:		CVSyncText,
+			staticText:		CVSyncText,
 		);
 		CV.viewDictionary = IdentityDictionary.new;
 
 		GUI.schemes.do { | gui|
 			var class;
 			#[
-			numberBox, slider, rangeSlider, slider2D, multiSliderView,
-			popUpMenu, listView,
-			tabletSlider2D, ezSlider, ezNumber, knob, button].collect { | name |
+				numberBox, slider, rangeSlider, slider2D, multiSliderView,
+				popUpMenu, listView, tabletSlider2D, ezSlider, ezNumber,
+				knob, button, textView, textField, staticText
+			].collect { | name |
 				if ( (class = gui.perform(name)).notNil) {
-					if(Main.versionAtLeast(3, 7)) { class = class.superclass };
+					if (Main.versionAtLeast(3, 7)) { class = class.superclass };
 					CV.viewDictionary.put(class, connectDictionary.at(name))
 				}
 			}
