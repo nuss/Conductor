@@ -183,6 +183,9 @@ ConductorSync : CVSync {
 
 }
 
+// use TextFields, TextViews and StaticTexts in CVs
+// pre-condition: texts must compile to arrays of numbers
+
 CVSyncText : CVSync {
 	classvar <>valRound=0.01;
 
@@ -202,33 +205,4 @@ CVSyncText : CVSync {
 	}
 
 }
-
-/*
-(
-~connectDictionary = (
-	numberBox:		CVSyncValue,
-	slider:			CVSync,
-	rangeSlider:		[CVSyncProperties, #[lo, hi]],
-	slider2D:			[CVSyncProperties, #[x, y] ],
-	multiSliderView:	CVSyncMulti,
-	popUpMenu:		SVSync,
-	listView:			SVSync,
-	tabletSlider2D:	[CVSyncProperties, #[x, y] ],
-	ezSlider:			CVSyncValue,
-	ezNumber:			CVSyncValue
-);
-
-~viewDictionary = ();
-
-GUI.schemes.do { | gui|
-#[ 	numberBox,  slider, rangeSlider, slider2D, multiSliderView, popUpMenu, listView,
-	tabletSlider2D, ezSlider, ezNumber].collect { | name |
-		[name, gui.perform(name), ~connectDictionary.at(name)].postln;
-//		~viewDictionary.put(gui.perform(name), ~connectDictionary.at(name))
-	}
-};
-
-)
-
-*/
 
