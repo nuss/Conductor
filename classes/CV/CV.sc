@@ -92,8 +92,6 @@ CV : Stream {
 			connectDictionary.slider2D = CVSyncProps(#[x, y]);
 		};
 
-		connectDictionary.pairsDo { |k, v| [k, v].postln };
-
 		CV.viewDictionary = IdentityDictionary.new;
 
 		GUI.schemes.do { | gui|
