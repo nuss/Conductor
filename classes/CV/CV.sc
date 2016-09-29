@@ -49,7 +49,21 @@ CV : Stream {
 
 // split turns a multi-valued CV into an array of single-valued CV's
 	split {
-		^value.collect { |v| CV(spec, v) }
+		if (spec.size > 1) {
+			^value.collect { |v, i|
+				CV(
+					ControlSpec(
+						spec.minval.wrapAt(i),
+						spec.maxval.wrapAt(i),
+						spec.warp,
+						spec.step.wrapAt(i),
+						spec.default.wrapAt(i),
+						spec.grid !? { spec.grid } // could spec.grid be an array of grids?
+					),
+					v
+				)
+			}
+		}
 	}
 
 // Stream and Pattern support
