@@ -53,10 +53,10 @@ CV : Stream {
 			^value.collect { |v, i|
 				CV(
 					ControlSpec(
-						spec.minval.wrapAt(i),
-						spec.maxval.wrapAt(i),
+						if (spec.minval.isArray) { spec.minval.wrapAt(i) } { spec.minval },
+						if (spec.maxval.isArray) { spec.maxval.wrapAt(i) } { spec.maxval },
 						spec.warp,
-						spec.step.wrapAt(i),
+						if (spec.step.isArray) { spec.step.wrapAt(i) } { spec.step },
 						spec.default.wrapAt(i),
 						spec.grid !? { spec.grid } // could spec.grid be an array of grids?
 					),
