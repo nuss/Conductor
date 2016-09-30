@@ -49,20 +49,11 @@ CV : Stream {
 
 // split turns a multi-valued CV into an array of single-valued CV's
 	split {
+		var specs;
+
 		if (spec.size > 1) {
-			^value.collect { |v, i|
-				CV(
-					ControlSpec(
-						if (spec.minval.isArray) { spec.minval.wrapAt(i) } { spec.minval },
-						if (spec.maxval.isArray) { spec.maxval.wrapAt(i) } { spec.maxval },
-						spec.warp,
-						if (spec.step.isArray) { spec.step.wrapAt(i) } { spec.step },
-						spec.default.wrapAt(i),
-						spec.grid !? { spec.grid } // could spec.grid be an array of grids?
-					),
-					v
-				)
-			}
+			specs = spec.split;
+			^value.collect { |v, i| CV(specs[i], v) }
 		}
 	}
 
