@@ -79,7 +79,6 @@ CV : Stream {
 			multiSliderView:	CVSyncMulti,
 			popUpMenu:		SVSync,
 			listView:			SVSync,
-			tabletSlider2D:	CVSyncProps(#[x, y]),
 			ezSlider:			CVSyncValue,
 			ezNumber:			CVSyncValue,
 			knob:			CVSyncInput,
@@ -103,7 +102,7 @@ CV : Stream {
 			var class;
 			#[
 				numberBox, slider, rangeSlider, slider2D, multiSliderView,
-				popUpMenu, listView, tabletSlider2D, ezSlider, ezNumber,
+				popUpMenu, listView, ezSlider, ezNumber,
 				knob, button, textView, textField, staticText
 			].collect { | name |
 				if ( (class = gui.perform(name)).notNil) {
