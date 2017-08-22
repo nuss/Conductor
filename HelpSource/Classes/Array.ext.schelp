@@ -11,7 +11,7 @@ an link::Classes/Integer::, representing the nodeID of a link::Classes/Synth:: i
 
 
 method:: connectToBuffer
-The receiver is an array of link::Classes/CVs::.
+The receiver is an array of link::Classes/CV::s.
 
 argument:: server
 an instance of link::Classes/Server:: (i.e. the server on which the link::Classes/Buffer:: has been initialized)
