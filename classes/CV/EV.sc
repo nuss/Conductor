@@ -33,7 +33,6 @@ EV : CV {
 
 	viewToEV { | view |
 		var t, l, c, env;
-		"view: %\n".postf(view);
 		env = value;
 		#t, l = view.value;
 		env.levels = spec.map(l);
