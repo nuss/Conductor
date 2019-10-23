@@ -44,7 +44,10 @@ IdentityDictionary[
 	(Knob -> CVSyncInput),
 	(Slider2D -> CVSyncProps.new),
 	(Button -> CVSyncValue),
-	(MultiSliderView -> CVSyncMulti)
+	(MultiSliderView -> CVSyncMulti),
+	(TextView -> CVSyncText),
+	(TextField -> CVSyncText),
+	(StaticText -> CVSyncText),
 ]
 ::
 
