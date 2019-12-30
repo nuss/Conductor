@@ -185,6 +185,9 @@ RangeSlider-connect([loCV, hiCV])
 MultiSliderView-connect(aCV)	// for CVs with multiple values
 PopupMenu-connect(aCV)	// for SVs, displays SV-items
 ListView-connect(aCV)	// for SVs
+TextField-connect(aCV) // for multidimensional CVs
+TextView-connect(aCV) // for multidimensional CVs, needs a keyDownAction or keyUpAction to update the CV
+StaticText-connection(aCV) // for multidimensional CVs, non-editable
 ::
 
 One CV can be connected to many views but each view is connected to only one CV. When a CV's value changes, it is relayed to all of its dependants including the source of the the change. That way, the GUI accurately reflects the new value of the CV. See the behavior of 'b' in the following example.

@@ -198,7 +198,7 @@ CVSyncText : CVSync {
 	value {
 		var arr = view.string.interpret;
 		if (arr.isKindOf(SequenceableCollection) and:{
-			arr.flat.select(_.isNumber).size == arr.flat.size
+			arr.flat.every(_.isNumber)
 		}, {
 			cv.value = arr.flat;
 		})
