@@ -57,7 +57,7 @@ a.show;
 
 (
 a.play;
-a[\freq].value = 700;
+a[\freq1].value = 700;
 )
 ::
 
