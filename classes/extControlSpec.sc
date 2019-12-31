@@ -14,7 +14,7 @@
 
 	// split a multi-dimensional ControlSpec into an array of one-dimensional ControlSpecs
 	split {
-		var specs, thisMinval, thisMaxval, thisStep, thisDefault, thisGrid;
+		var specs, thisMinval, thisMaxval, thisStep, thisDefault;
 
 		if (this.size > 1) {
 			specs = Array.newClear(this.size);
@@ -23,7 +23,6 @@
 				if (maxval.isArray) { thisMaxval = maxval.wrapAt(i) } { thisMaxval = maxval };
 				if (step.isArray) { thisStep = step.wrapAt(i) } { thisStep = step };
 				if (this.default.isArray) { thisDefault = this.default.wrapAt(i) } { thisDefault = this.default };
-				this.grid !? { thisGrid = this.grid };
 				specs[i] = ControlSpec(thisMinval, thisMaxval, warp, thisStep, thisDefault, grid);
 			}
 		} {
