@@ -106,6 +106,7 @@ CV : Stream {
 				knob, button, textView, textField, staticText
 			].collect { | name |
 				if ( (class = gui.perform(name)).notNil) {
+					// regard GUI.schemes changes from SC version 3.7 and up
 					if (Main.versionAtLeast(3, 7)) { class = class.superclass };
 					CV.viewDictionary.put(class, connectDictionary.at(name))
 				}
