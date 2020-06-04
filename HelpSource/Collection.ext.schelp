@@ -1,0 +1,17 @@
+INSTANCEMETHODS::
+
+METHOD:: depth
+A simple method to determine the levels of nesting within a Collection. A Collection with no nested Collections simply returns code::1::.
+
+CODE::
+[1, 2, 3].depth // 1
+[2, [4, 7]].depth // 2
+::
+
+A Collection may have nested Collections of different types:
+
+CODE::
+List[8, 9, (a: 89, b: Set(8, 10, IdentityDictionary[\a -> 6, \b -> 12]), g: \aaa)].depth // 3
+::
+
+RETURNS:: an link::Classes/Integer::
