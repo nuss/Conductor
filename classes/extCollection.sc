@@ -1,7 +1,7 @@
 +Collection {
 
 	depth {
-		var depth = 0;
+		var depth = 1;
 		var func = { |col|
 			var cols = col.select { |it| it.isCollection };
 			if (cols.size > 0) {
