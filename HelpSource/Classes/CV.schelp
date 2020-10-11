@@ -104,12 +104,6 @@ either 'linear' or 'exponential'
 
 In the case of exponential warp, min and max must be non-zero and the same sign.
 
-METHOD:: connect
-Connects a CV to a view. link::Classes/Array:: defines connect to allow a set of CVs to be connected to a view with multiple control values (i.e., link::Classes/Slider2D::).
-
-ARGUMENT:: view
-a link::Classes/View::, usable with a CV. See link::#*viewDictionary:: to for an overview of qualified views.
-
 subsection:: Accessing
 
 METHOD:: value
@@ -174,6 +168,9 @@ an arbitrary link::Classes/Function::
 returns:: a link::Classes/SimpleController::
 
 subsection:: GUI connections
+
+METHOD:: connect
+Connects a CV to a view. link::Classes/Array:: defines connect to allow a set of CVs to be connected to a view with multiple control values (i.e., link::Classes/Slider2D::).
 
 The following methods establish connections link::Classes/View::s and CVs.
 code::
@@ -241,6 +238,9 @@ c.connect(m);
 c.action_({ |cv| "the CV's value is now %\n".postf(cv.value) });
 )
 ::
+
+ARGUMENT:: view
+a link::Classes/View::, usable with a CV. See link::#*viewDictionary:: to for an overview of qualified views.
 
 subsection:: Server connections
 
