@@ -13,18 +13,19 @@
 CV : Stream {
 	classvar <>viewDictionary;
 
-	var <spec, <value;
+	var <>spec, <value;
 	var controllers;
 
 	*initClass {
 		StartUp.add ({ CV.buildViewDictionary })
 	}
 
-	*new { |spec = \unipolar|
-		^super.newCopyArgs(spec).init;
+	*new { |spec = \unipolar, value|
+		^super.newCopyArgs(spec.asSpec).init(value);
 	}
 
-	init {
+	init { |value|
+		this.value_(value ? this.spec.default);
 		controllers = Set();
 	}
 
@@ -47,39 +48,34 @@ CV : Stream {
 
 
 	// reading and writing the CV
-	value_ { | val |
-		value = spec.constrain(val);
+	value_ { |val|
+		value = this.spec.constrain(val);
 		this.changed(\synch, this);
 	}
 
-	input_	{ | in | this.value_(spec.map(in)); }
-	input 	{ ^spec.unmap(value) }
-	asInput 	{ | val | ^spec.unmap(val) }
-
-	// setting the ControlSpec
-	spec_ { |s|
-		spec = s.asSpec;
-	}
+	input_ { |in| this.value_(this.spec.map(in)) }
+	input { ^this.spec.unmap(value) }
+	asInput { |val| ^this.spec.unmap(val) }
 
 	default_ { |val|
 		this.spec.default_(val);
 		this.value_(val);
 	}
 
-	sp	{ | default= 0, lo = 0, hi=0, step = 0, warp = 'lin' |
+	sp { |default = 0, lo = 0, hi = 0, step = 0, warp = 'lin'|
 		this.spec = ControlSpec(lo,hi, warp, step, default);
 	}
 
-	db	{ | default= 0, lo = -100, hi = 20, step = 1, warp = 'lin' |
-		this.spec = ControlSpec(lo,hi, warp, step, default);
+	db {
+		this.spec = ControlSpec(-100, 20, \lin, 1, 0);
 	}
 
 	// split turns a multi-valued CV into an array of single-valued CV's
 	split {
 		var specs;
 
-		if (spec.size > 1) {
-			specs = spec.split;
+		if (this.spec.size > 1) {
+			specs = this.spec.split;
 			^value.collect { |v, i| CV(specs[i], v) }
 		}
 	}
