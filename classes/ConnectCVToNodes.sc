@@ -2,21 +2,21 @@
 	Utilities to connect ControlValues to Node controls, Control Buses, and Node Proxys.
 
 	Array-connect(connectFunc, disconnectFunc)
-	
-	Array-connectToBus	(server, index)	
+
+	Array-connectToBus	(server, index)
 		the array consists of SimpleNumbers and ControlValues
-		
+
 	Array-connectToNode (server, nodeID)
 	Array-connectToNodeProxy (nodeProxy)
 		the array consists of labels alternating with a SimpleNumber or ControlValues
-		
+
 
 	Bus-setControls( arrayOfValuesAndControlValues)
 	Node-setControls( [name, (control)Value, name, (control)Value...])
 	NodeProxy-setControls( [name, (control)Value, name, (control)Value...])
 		'setControls' acts like 'set', but replaces ControlValues with their
 		values in the array and creates the needed synchronization logic (see below).
-	
+
 implementation:
 A SimpleController dependant on the ControlValue relays changes to the NC, CB, or NP.
 OSCresponders are used to remove the SimpleController when the NC, CB or NP is freed.
@@ -25,21 +25,21 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 */
 
 +Array {
-	
+
 	/*	parameters array items are either:
-			1: [label, cv] or 
-			2: [label [cv, expr]] or 
+			1: [label, cv] or
+			2: [label [cv, expr]] or
 			3: [label [cvArray, expr]] or
 			4: [label [
-		
+
 		buildCVConnections iterates an argument array, doing the right thing for each case.
 		It is passed a function that
-		
+
 	*/
 
 	connect { | view |
 		CV.viewDictionary[view.class].new(this, view) ;
-	}		
+	}
 
 	buildCVConnections { | connectFunc, disconnectFuncBuilder |
 		var parameters, cvLinks;
@@ -53,19 +53,19 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 			expr = expr ? cv;
 			if (expr.isNumber.not) {
 				cv.asArray.do { | cv |
-					cvLinks.add(cv.action_({connectFunc.value(label, expr)}))
+					cvLinks.add(cv.addController({connectFunc.value(label, expr)}))
 				}
 			};
 			[label,expr.value]
 		};
-		
+
 		if (cvLinks.size > 0) { disconnectFuncBuilder.value(cvLinks)};
 		^parameters;
 	}
-		
+
 	connectToNode { |server, nodeID|
 		^this.buildCVConnections(
-			{ | label, expr| 
+			{ | label, expr|
 				var val, group, addAction, msg;
 				if (label != 'group') {
 					val = expr.value.asArray;
@@ -83,13 +83,13 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 				};
 				server.sendBundle(server.latency, msg);
 			}, { | cvLinks|
-			OSCpathResponder(server.addr, ["/n_end", nodeID], 
-				{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;} 
+			OSCpathResponder(server.addr, ["/n_end", nodeID],
+				{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;}
 			).add;
 			}
 		).flatten(1);
 	}
-	
+
 	buildUnlabeledCVConnections { | connectFunc, disconnectFunc |
 		var parameters, cvLinks;
 		parameters = this.copy;
@@ -101,16 +101,16 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 			expr = expr ? cv;
 			if (expr.isNumber.not) {
 				cv.asArray.do { | cv |
-					cvLinks.add(cv.action_({connectFunc.value(label, expr)}))
+					cvLinks.add(cv.addController({connectFunc.value(label, expr)}))
 				}
 			};
 			expr.value
 		};
-		
+
 		if (cvLinks.size > 0) { disconnectFunc.value(cvLinks)};
 		^parameters;
 	}
-		
+
 	connectToBus { |server, busIndex|
 		^this.buildUnlabeledCVConnections(
 			{ | label, expr|
@@ -118,8 +118,8 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 				val = expr.value.asArray;
 				server.sendBundle(server.latency,['/c_setn', busIndex + label, val.size] ++ val);
 			}, { | cvLinks|
-			OSCpathResponder(server.addr, ["/c_end", busIndex], 
-				{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;} 
+			OSCpathResponder(server.addr, ["/c_end", busIndex],
+				{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;}
 			).add;
 			}
 		);
@@ -132,13 +132,13 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 				val = expr.value.asArray;
 				server.sendBundle(server.latency,['/b_setn', bufferNumber, val.size] ++ val);
 			}, { | cvLinks|
-			OSCpathResponder(server.addr, ["/b_free", bufferNumber], 
-				{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;} 
+			OSCpathResponder(server.addr, ["/b_free", bufferNumber],
+				{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;}
 			).add;
 			}
 		);
 	}
-	
+
 
 }
 
@@ -161,17 +161,17 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 		 	*(args.connectToNode(synth.server, synth.nodeID) )
 		 ); //"s_new"
 		^synth
-	
+
 	}
 }
 
 +NodeProxy {
-	setControls { | args | 
+	setControls { | args |
 		args.buildCVConnections(
-			{ | label, expr| this.set(label, expr.value)}, 
+			{ | label, expr| this.set(label, expr.value)},
 			{ | cvLinks|
-				OSCpathResponder(group.server.addr, ["/n_end", group.nodeID], 
-					{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;} 
+				OSCpathResponder(group.server.addr, ["/n_end", group.nodeID],
+					{ arg time, resp, msg; cvLinks.do({ arg n; n.remove}); resp.remove;}
 				).add;
 			}
 		)
@@ -179,13 +179,13 @@ This is implemented with a dummy OSC message when freeing a Control Bus.
 		;
 	}
 
-	
+
 }
 
 +Event {
-	setControls { |args| 
+	setControls { |args|
 		args.buildCVConnections(
-			{ | label, expr|this.put(label, expr.value)}, 
+			{ | label, expr|this.put(label, expr.value)},
 			{ |cvLinks| this.put(\cvLinks, cvLinks) }
 		)
 		.do { | pair | this.put(pair[0], pair[1]) }
