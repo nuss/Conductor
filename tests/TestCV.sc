@@ -89,4 +89,24 @@ TestCV : UnitTest {
 		this.assertEquals(cv.value, 0.0, "Calling default_ with a value outside the ControlSpec's constraints should set the value to the ControlSpec's minval or maxval");
 		this.assertEquals(cv.spec.default, 3, "Calling default_ with a value outside the ControlSpec's constraints should leave the ControlSpec's default untouched")
 	}
+
+	test_next {
+		var cv = CV([0, 5, \lin, 0, 2].asSpec);
+		this.assertFloatEquals(cv.next, 2.0, "Calling next on a CV should return its value")
+	}
+
+	test_embedInStream {
+		var cv = CV([0, 5, \lin, 0, 2].asSpec);
+		var stream;
+		try {
+			cv.embedInStream
+		} { |err|
+			this.assertEquals(err.class, PrimitiveFailedError, "Trying to call embedInStream outside a Routine should throw a PrimitiveFailedError")
+		};
+		stream = Routine { cv.embedInStream };
+		this.assertFloatEquals(stream.next, 2.0, "embedInStream should yield the CV's value");
+		cv.value_(3.421);
+		this.assertEquals(stream.next, nil, "embedInStream can only yield once");
+	}
+
 }

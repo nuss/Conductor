@@ -45,9 +45,14 @@ CV : Stream {
 	}
 
 	removeControllers {
+		// var count = 1;
 		controllers.do { |ctrl|
 			ctrl.remove;
+			// "controller % removed - is still in Object.dependantsDictionary? %\n".postf(count, Object.dependantsDictionary.keys.includes(this));
+			// "num controllers before: %\n".postf(controllers.size);
 			controllers.remove(ctrl);
+			// "num controllers after: %\n".postf(controllers.size);
+			// count = count + 1;
 		}
 	}
 
