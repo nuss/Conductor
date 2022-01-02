@@ -21,7 +21,12 @@ CV : Stream {
 	}
 
 	*new { |spec = \unipolar, value|
-		^super.newCopyArgs(spec.asSpec).init(value);
+		// implicit fallback spec generation:
+		// if an invalid Symbol is given for spec
+		// it will return nil on calling asSpec on it.
+		// calling nil.asSpec will simply return the default
+		// \unipolar spec
+		^super.newCopyArgs(spec.asSpec.asSpec).init(value);
 	}
 
 	init { |value|
@@ -58,7 +63,9 @@ CV : Stream {
 	asInput { |val| ^this.spec.unmap(val) }
 
 	default_ { |val|
-		this.spec.default_(val);
+		var min = min(this.spec.minval, this.spec.maxval);
+		var max = max(this.spec.minval, this.spec.maxval);
+		if ((min <= val).and(val <= max)) { this.spec.default_(val) };
 		this.value_(val);
 	}
 
