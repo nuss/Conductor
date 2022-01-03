@@ -14,7 +14,6 @@ CV : Stream {
 	classvar <>viewDictionary;
 
 	var <>spec, <value;
-	var controllers;
 
 	*initClass {
 		StartUp.add ({ CV.buildViewDictionary })
@@ -31,29 +30,24 @@ CV : Stream {
 
 	init { |value|
 		this.value_(value ? this.spec.default);
-		controllers = Set();
 	}
 
+	// SimpleControllers are easy to add and remove
+	// however, controllers remain 'hidden' to the users
+	// we're taking a shortcut here via Object's dependantsDictionary
+	// that way a CV doesn't need its own list for bookkeeping
 	numControllers {
-		^controllers.size;
+		if (dependantsDictionary[this].notNil) {
+			^dependantsDictionary[this].size;
+		} { ^0 }
 	}
 
 	addController { |function|
-		var ctrl = SimpleController(this).put(\synch, function);
-		controllers.add(ctrl);
-		^ctrl;
+		^SimpleController(this).put(\synch, function);
 	}
 
-	removeControllers {
-		// var count = 1;
-		controllers.do { |ctrl|
-			ctrl.remove;
-			// "controller % removed - is still in Object.dependantsDictionary? %\n".postf(count, Object.dependantsDictionary.keys.includes(this));
-			// "num controllers before: %\n".postf(controllers.size);
-			controllers.remove(ctrl);
-			// "num controllers after: %\n".postf(controllers.size);
-			// count = count + 1;
-		}
+	removeAllControllers {
+		dependantsDictionary.removeAt(this)
 	}
 
 
@@ -70,7 +64,7 @@ CV : Stream {
 	default_ { |val|
 		var min = min(this.spec.minval, this.spec.maxval);
 		var max = max(this.spec.minval, this.spec.maxval);
-		if ((min <= val).and(val <= max)) { this.spec.default_(val) };
+		if ((min <= val).and(val <= max)) { this.spec.default_(this.spec.constrain(val)) };
 		this.value_(val);
 	}
 
@@ -118,7 +112,7 @@ CV : Stream {
 		connectDictionary.rangeSlider = CVSyncProps(#[loValue, hiValue]);
 		connectDictionary.slider2D = CVSyncProps(#[xValue, yValue]);
 
-		CV.viewDictionary = IdentityDictionary.new;
+		this.viewDictionary = IdentityDictionary.new;
 
 		GUI.schemes.do { | gui|
 			var class;
@@ -129,7 +123,7 @@ CV : Stream {
 			].collect { | name |
 				if ((class = gui.perform(name)).notNil) {
 					class = class.superclass;
-					CV.viewDictionary.put(class, connectDictionary.at(name))
+					this.viewDictionary.put(class, connectDictionary.at(name))
 				}
 			}
 		};

@@ -41,7 +41,7 @@ TestCV : UnitTest {
 		this.assertEquals(ctrl.class, SimpleController, "The CV's controller should be of class SimpleController");
 		cv.addController({ |cv| });
 		this.assertEquals(cv.numControllers, 2, "The CV should have 2 actions added in 2 SimpleControllers");
-		cv.removeControllers;
+		cv.removeAllControllers;
 		0.1.wait;
 		this.assertEquals(cv.numControllers, 0, "All actions and controllers should have been removed from the CV");
 	}
@@ -56,7 +56,7 @@ TestCV : UnitTest {
 		this.assertFloatEquals(~test, 4.3, "The value of ~test, addressed in the CV's dependedent action, should be 4.3");
 		cv.value_([1, 2, 3]);
 		this.assertEquals(cv.value, [1, 2, 3], "Setting a CV's value to an array of numbers will multichannel-expand the CV");
-		cv.removeControllers;
+		cv.removeAllControllers;
 		this.assertEquals(cv.numControllers, 0, "The CV's dependents should have been removed");
 		~test = nil;
 	}
@@ -69,7 +69,7 @@ TestCV : UnitTest {
 		cv.input_(0.231);
 		this.assertFloatEquals(cv.input, 0.231, "The CV's input should have been set to 0.231");
 		this.assertFloatEquals(~test, 0.231, "The value of ~test, addressed in the CV's dependedent action, should be 0.231");
-		cv.removeControllers;
+		cv.removeAllControllers;
 		this.assertEquals(cv.numControllers, 0, "The CV's dependents should have been removed");
 		~test = nil;
 	}
@@ -98,15 +98,17 @@ TestCV : UnitTest {
 	test_embedInStream {
 		var cv = CV([0, 5, \lin, 0, 2].asSpec);
 		var stream;
-		try {
-			cv.embedInStream
-		} { |err|
-			this.assertEquals(err.class, PrimitiveFailedError, "Trying to call embedInStream outside a Routine should throw a PrimitiveFailedError")
-		};
+		// tests are running in a Routine themselves?
+		// this.assertException({ cv.embedInStream }, PrimitiveFailedError, "Trying to call embedInStream outside a Routine should throw a PrimitiveFailedError");
 		stream = Routine { cv.embedInStream };
 		this.assertFloatEquals(stream.next, 2.0, "embedInStream should yield the CV's value");
 		cv.value_(3.421);
 		this.assertEquals(stream.next, nil, "embedInStream can only yield once");
+	}
+
+	test_buildViewDictionary {
+		this.assertEquals(CV.viewDictionary.class, IdentityDictionary, "Class CV's viewDictionary should be an IdentityDictionary");
+		this.assert(CV.viewDictionary.notEmpty, "Class CV's viewDictionary should not be empty");
 	}
 
 }
