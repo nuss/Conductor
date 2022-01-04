@@ -1,0 +1,8 @@
+(
+name: "Conductor fixes",
+summary: "A copy of Ron Kuivilla's Conductor quark with a few fixes. Note that this can't be installed alongside with the original Conductor quark",
+version: "1.0.0",
+schelp: "Conductor",
+license: "GPL",
+copyright: "Ronald Kuivilla"
+)
